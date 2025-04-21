@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import * as SecureStore from 'expo-secure-store';
 
 const apiUrl = "http://192.168.0.101:3000";
 
@@ -20,81 +21,69 @@ const initialState: CategoryState = {
 };
 
 export const fetchCategories = createAsyncThunk('categories/fetchCategories', async () => {
-  try {
-    const response = await fetch(`${apiUrl}/categories`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch categories');
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Error fetching categories:', error);
-    throw error;
+  const response = await fetch(`${apiUrl}/categories`);
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to fetch categories');
   }
+  return await response.json();
 });
 
 export const addCategory = createAsyncThunk(
   'categories/addCategory',
   async ({ title }: { title: string }) => {
-    try {
-      const response = await fetch(`${apiUrl}/categories`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to add category');
-      }
-
-      const newCategory = await response.json();
-      return newCategory;
-    } catch (error) {
-      console.error('Error adding category:', error);
-      throw error;
+    const token = await SecureStore.getItemAsync('token');
+    const response = await fetch(`${apiUrl}/categories`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ title }),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to add category');
     }
+    return await response.json();
   }
 );
 
 export const editCategory = createAsyncThunk(
   'categories/editCategory',
   async ({ id, title }: { id: string; title: string }) => {
-    try {
-      const response = await fetch(`${apiUrl}/categories/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to edit category');
-      }
-
-      const updatedCategory = await response.json();
-      return updatedCategory;
-    } catch (error) {
-      console.error('Error editing category:', error);
-      throw error;
+    const token = await SecureStore.getItemAsync('token');
+    const response = await fetch(`${apiUrl}/categories/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ title }),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to edit category');
     }
+    return await response.json();
   }
 );
 
 export const deleteCategory = createAsyncThunk(
   'categories/deleteCategory',
   async (id: string) => {
-    try {
-      const response = await fetch(`${apiUrl}/categories/${id}`, { method: 'DELETE' });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete category');
-      }
-
-      return id;
-    } catch (error) {
-      console.error('Error deleting category:', error);
-      throw error;
+    const token = await SecureStore.getItemAsync('token');
+    const response = await fetch(`${apiUrl}/categories/${id}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to delete category');
     }
+    return id;
   }
 );
 
@@ -115,7 +104,6 @@ const categorySlice = createSlice({
         state.loading = false;
         state.error = action.error.message ?? 'Failed to load categories';
       })
-
       .addCase(addCategory.pending, (state) => {
         state.loading = true;
       })
@@ -127,7 +115,6 @@ const categorySlice = createSlice({
         state.loading = false;
         state.error = action.error.message ?? 'Failed to add category';
       })
-
       .addCase(editCategory.pending, (state) => {
         state.loading = true;
       })
@@ -143,15 +130,12 @@ const categorySlice = createSlice({
         state.loading = false;
         state.error = action.error.message ?? 'Failed to edit category';
       })
-
       .addCase(deleteCategory.pending, (state) => {
         state.loading = true;
       })
       .addCase(deleteCategory.fulfilled, (state, action) => {
         state.loading = false;
-        state.categories = state.categories.filter(
-          (category) => category.id !== action.payload
-        );
+        state.categories = state.categories.filter((category) => category.id !== action.payload);
       })
       .addCase(deleteCategory.rejected, (state, action) => {
         state.loading = false;

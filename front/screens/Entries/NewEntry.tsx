@@ -18,7 +18,6 @@ const NewEntry = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigation = useNavigation();
   
-  // Fetch categories
   useEffect(() => {
     dispatch(fetchCategories());
   }, [dispatch]);

@@ -21,7 +21,7 @@ export class AuthService {
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
-console.log(isPasswordValid)
+
     if (!isPasswordValid) {
       throw new HttpException('Invalid email and/or password', HttpStatus.UNAUTHORIZED);
     }
@@ -29,7 +29,6 @@ console.log(isPasswordValid)
     const payload = { userId: user.id };
 
     const access_token = await this.jwtService.signAsync(payload);
-console.log(access_token)
 
     return { access_token };
   }

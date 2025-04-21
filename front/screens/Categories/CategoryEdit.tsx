@@ -3,6 +3,7 @@ import { View, TextInput, Button, StyleSheet } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../../store/store';
+import * as SecureStore from 'expo-secure-store';
 import { editCategory } from '../../store/categorySlice';
 
 type RouteParams = { id: string };
@@ -27,7 +28,12 @@ const CategoryEdit = () => {
   };
 
   const getCategory = (async(id: String)=> {
-  const response = await fetch(`${apiUrl}/categories/${id}`, { method: 'GET' });
+  const token = await SecureStore.getItemAsync('token');
+  const response = await fetch(`${apiUrl}/categories/${id}`, { method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      }, });
     const data = await response.json();
     setText(data.title);
 })

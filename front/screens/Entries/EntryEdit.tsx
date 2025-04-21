@@ -7,6 +7,7 @@ import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../../store/store';
 import { editEntry } from '../../store/entrySlice';
 import { Picker } from '@react-native-picker/picker';
+import * as SecureStore from 'expo-secure-store';
 
 type RouteParams = { id: string };
 const apiUrl = "http://192.168.0.101:3000"; // Replace with your API URL
@@ -32,7 +33,12 @@ const EntryEdit = () => {
   }, [id]);
 
   const getEntry = async (id: string) => {
-    const response = await fetch(`${apiUrl}/entries/${id}`, { method: 'GET' });
+    const token = await SecureStore.getItemAsync('token');
+      const response = await fetch(`${apiUrl}/entries/${id}`, { method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          }, });
     const data = await response.json();
     setTitle(data.title);
     setAmount(data.amount.toString());
@@ -43,7 +49,12 @@ const EntryEdit = () => {
   };
 
   const getCategories = async () => {
-    const response = await fetch(`${apiUrl}/categories`, { method: 'GET' });
+    const token = await SecureStore.getItemAsync('token');
+    const response = await fetch(`${apiUrl}/categories`, { method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      }, });
     const data = await response.json();
     setCategories(data);
   };
